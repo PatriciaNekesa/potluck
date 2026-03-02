@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carol's Sip & See · Potluck Sign-up</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #fdf8f2;
+    --ink: #3d2e28;
+    --ink-light: #7a6558;
+    --rose: #d4849a;
+    --rose-light: #eac4cf;
+    --rose-pale: #fff0f5;
+    --sage: #8fa88b;
+    --sage-light: #b8ccb4;
+    --dust: #c9b8a8;
+    --border: #e8ddd8;
+  }
+
+  body {
+    background: linear-gradient(160deg, #fdf8f2 0%, #f9f0f4 50%, #f2f8f5 100%);
+    min-height: 100vh;
+    font-family: 'Jost', sans-serif;
+    padding-bottom: 60px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #3d2e28 0%, #5a4038 100%);
+    padding: 52px 24px 44px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-dot {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.25;
+  }
+  .hero-label {
+    font-weight: 200;
+    font-size: 10px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 12px;
+    display: block;
+  }
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 42px;
+    color: var(--cream);
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+  }
+  .hero p {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 17px;
+    color: var(--dust);
+    margin: 0 0 28px;
+  }
+  .progress-wrap {
+    max-width: 320px;
+    margin: 0 auto;
+  }
+  .progress-track {
+    background: rgba(255,255,255,0.12);
+    border-radius: 20px;
+    height: 6px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--rose), var(--sage));
+    border-radius: 20px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+  .progress-label {
+    font-weight: 200;
+    font-size: 11px;
+    color: var(--dust);
+    letter-spacing: 1px;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 0 0;
+  }
+  .tab-btn {
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    padding: 8px 20px;
+    border: 1px solid var(--dust);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    color: var(--dust);
+    border-radius: 0;
+  }
+  .tab-btn.active {
+    background: var(--cream);
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 680px;
+    margin: 24px auto 0;
+    padding: 0 20px;
+  }
+  .note {
+    text-align: center;
+    font-weight: 200;
+    font-size: 11px;
+    color: #b8a8a0;
+    font-style: italic;
+    margin-bottom: 24px;
+  }
+
+  /* ── GRID ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+
+  .dish-card {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .dish-card:hover:not(.taken) {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.10);
+  }
+  .dish-card.taken { cursor: default; opacity: 0.85; }
+  .dish-card.taken:hover { transform: none; }
+
+  .card-top { display: flex; align-items: flex-start; gap: 12px; }
+  .card-emoji { font-size: 28px; line-height: 1; flex-shrink: 0; }
+  .card-body { flex: 1; }
+  .card-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+  .card-category {
+    font-weight: 200;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .card-badge {
+    font-weight: 300;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--ink);
+    margin: 0 0 3px;
+  }
+  .card-hint {
+    font-weight: 200;
+    font-size: 11px;
+    color: #b8a8a0;
+    line-height: 1.5;
+  }
+  .card-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 14px;
+    margin: 0 0 2px;
+  }
+  .card-diet {
+    font-weight: 200;
+    font-size: 11px;
+    color: #b8a8a0;
+    margin: 0;
+  }
+  .card-footer {
+    margin-top: 14px;
+    padding-top: 7px;
+    border-top: 1px solid #f0e8e0;
+    text-align: center;
+    font-weight: 300;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--dust);
+  }
+
+  /* ── ADMIN TABLE ── */
+  .admin-table {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  }
+  .admin-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0e8e0;
+  }
+  .admin-row:last-child { border-bottom: none; }
+  .admin-emoji { font-size: 22px; width: 28px; text-align: center; flex-shrink: 0; }
+  .admin-info { flex: 1; }
+  .admin-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ink);
+    margin: 0 0 2px;
+  }
+  .admin-details { font-weight: 300; font-size: 12px; margin: 0; }
+  .admin-open { font-weight: 200; font-size: 12px; color: var(--dust); margin: 0; font-style: italic; }
+  .status-pill {
+    font-weight: 300;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border: 1px solid;
+    border-radius: 10px;
+  }
+  .remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--dust);
+    font-size: 14px;
+    padding: 2px 6px;
+    transition: color 0.2s;
+  }
+  .remove-btn:hover { color: var(--rose); }
+  .admin-notice {
+    margin-top: 20px;
+    background: #fff8f0;
+    border: 1px solid #f0d8c0;
+    border-radius: 8px;
+    padding: 14px 18px;
+    text-align: center;
+  }
+  .admin-notice p {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: #7a5030;
+    margin: 0;
+  }
+
+  /* ── HOST KEY ── */
+  .host-key-wrap {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .host-key-wrap input {
+    flex: 1;
+    border: 1px solid var(--border);
+    background: white;
+    padding: 9px 14px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    color: var(--ink);
+    outline: none;
+    border-radius: 0;
+  }
+  .host-key-wrap input:focus { border-color: var(--rose); }
+  .host-key-wrap button {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 9px 18px;
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .host-key-wrap button:hover { background: #5a4038; }
+
+  /* ── MODAL ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(40,28,24,0.5);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .modal {
+    background: var(--cream);
+    padding: 36px 32px 28px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 24px 60px rgba(40,28,24,0.25);
+    position: relative;
+    animation: slideUp 0.25s ease;
+  }
+  .modal-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--dust);
+    font-size: 22px;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--rose); }
+  .modal-header { text-align: center; margin-bottom: 24px; }
+  .modal-emoji { font-size: 36px; display: block; margin-bottom: 10px; }
+  .modal-cat {
+    font-weight: 200;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 26px;
+    color: var(--ink);
+    margin: 0 0 4px;
+  }
+  .modal-hint { font-weight: 200; font-size: 12px; color: #b8a8a0; font-style: italic; }
+
+  .field-group { display: flex; flex-direction: column; gap: 12px; }
+  .field label {
+    font-weight: 300;
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #8a7870;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .field input {
+    width: 100%;
+    border: 1px solid #ddd0c8;
+    background: #fdfaf8;
+    padding: 11px 14px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+    border-radius: 0;
+  }
+  .field input:focus { border-color: var(--rose); }
+  .field input::placeholder { color: #c4b0a8; font-style: italic; }
+
+  .submit-btn {
+    width: 100%;
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 13px 28px;
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    margin-top: 8px;
+  }
+  .submit-btn:hover:not(:disabled) { background: #5a4038; transform: translateY(-1px); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .error-msg {
+    background: #fff0f0;
+    border: 1px solid #f0c0c0;
+    color: #a04040;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: white;
+    padding: 12px 24px;
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 1px;
+    z-index: 200;
+    white-space: nowrap;
+    animation: slideUp 0.3s ease;
+    pointer-events: none;
+  }
+
+  /* ── LOADING ── */
+  .loading {
+    text-align: center;
+    padding: 60px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--dust);
+    font-size: 18px;
+  }
+
+  /* ── HIDDEN ── */
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <span class="hero-label">Carol's Sip &amp; See</span>
+  <h1>Potluck Sign-up</h1>
+  <p>Claim your dish and help make it a feast</p>
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+    </div>
+    <p class="progress-label" id="progress-label">Loading…</p>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" id="tab-signup" onclick="switchTab('signup')">Sign up</button>
+  <button class="tab-btn" id="tab-host" onclick="switchTab('host')">Host view</button>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- Sign up view -->
+  <div id="view-signup">
+    <p class="note" style="margin-top: 20px;">Tap an open slot to claim it — first come, first served 🌿</p>
+    <div class="loading" id="grid-loading">Loading dishes…</div>
+    <div class="grid hidden" id="dish-grid"></div>
+  </div>
+
+  <!-- Host view -->
+  <div id="view-host" class="hidden">
+    <p class="note" style="margin-top: 20px;">Full overview of who's bringing what 🔒</p>
+
+    <div class="host-key-wrap">
+      <input type="password" id="host-key-input" placeholder="Enter host key to unlock…">
+      <button onclick="unlockHost()">Unlock</button>
+    </div>
+
+    <div class="loading hidden" id="host-loading">Loading…</div>
+    <div class="hidden" id="host-content">
+      <div class="admin-table" id="admin-table"></div>
+      <div class="admin-notice hidden" id="admin-notice">
+        <p id="admin-notice-text"></p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="overlay hidden" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-header">
+      <span class="modal-emoji" id="modal-emoji"></span>
+      <span class="modal-cat" id="modal-cat"></span>
+      <h2 class="modal-title" id="modal-title"></h2>
+      <p class="modal-hint" id="modal-hint"></p>
+    </div>
+    <div class="field-group">
+      <div class="field">
+        <label>Your name *</label>
+        <input type="text" id="input-name" placeholder="e.g. Sophie">
+      </div>
+      <div class="field">
+        <label>What specifically? (optional)</label>
+        <input type="text" id="input-dish" placeholder="e.g. Spinach & ricotta lasagne">
+      </div>
+      <div class="field">
+        <label>Allergen / dietary notes (optional)</label>
+        <input type="text" id="input-diet" placeholder="e.g. Gluten free, contains nuts…">
+      </div>
+      <button class="submit-btn" id="submit-btn" onclick="submitClaim()">Claim this dish</button>
+      <div class="error-msg hidden" id="modal-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast hidden" id="toast"></div>
+
+<script>
+  const DISHES = [
+    { id: "main1",   category: "Main",    emoji: "🍲", label: "Hearty Main",     hint: "Pasta bake, quiche, curry, lasagne…" },
+    { id: "main2",   category: "Main",    emoji: "🥘", label: "Second Main",     hint: "Roast chicken, frittata, pie…" },
+    { id: "salad",   category: "Salad",   emoji: "🥗", label: "Fresh Salad",     hint: "Green salad, grain salad, slaw…" },
+    { id: "side",    category: "Side",    emoji: "🫕", label: "Warm Side",       hint: "Roasted veg, rice dish, bread…" },
+    { id: "nibbles", category: "Nibbles", emoji: "🧀", label: "Arrival Nibbles", hint: "Antipasto, dips & bread, charcuterie…" },
+    { id: "dessert", category: "Dessert", emoji: "🍰", label: "Dessert",         hint: "Cake, tart, pudding, pavlova…" },
+    { id: "sweet",   category: "Sweet",   emoji: "🍪", label: "Sweet Treats",    hint: "Cookies, brownies, truffles…" },
+    { id: "drinks",  category: "Drinks",  emoji: "🍹", label: "Drinks",          hint: "Juice, sparkling water, mocktail…" },
+  ];
+
+  const COLORS = {
+    Main:    { bg: "#fff5f0", border: "#f4b8a0", dot: "#e8845a", text: "#7a3820" },
+    Salad:   { bg: "#f2faef", border: "#aed49e", dot: "#6ab552", text: "#2d5c20" },
+    Side:    { bg: "#fffbf0", border: "#f5d98a", dot: "#d4a82a", text: "#6b4e10" },
+    Nibbles: { bg: "#f8f4ff", border: "#c8b4f0", dot: "#9b72e0", text: "#4a2880" },
+    Dessert: { bg: "#fff0f5", border: "#f0b0c8", dot: "#d4608c", text: "#7a1840" },
+    Sweet:   { bg: "#fff0f5", border: "#f0b0c8", dot: "#e07090", text: "#7a2045" },
+    Drinks:  { bg: "#f0f8ff", border: "#a8d4f0", dot: "#4a9fd4", text: "#1a4870" },
+  };
+
+  let assignments = {};
+  let activeSlot = null;
+  let currentTab = "signup";
+  let hostUnlocked = false;
+  let hostKey = "";
+
+  // ── INIT ──
+  async function init() {
+    await loadAssignments();
+    renderGrid();
+    document.getElementById("grid-loading").classList.add("hidden");
+    document.getElementById("dish-grid").classList.remove("hidden");
+  }
+
+  async function loadAssignments() {
+    try {
+      const res = await fetch("/api/assignments");
+      if (res.ok) assignments = await res.json();
+    } catch (e) {
+      console.error("Failed to load:", e);
+    }
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const filled = Object.keys(assignments).length;
+    const total = DISHES.length;
+    const pct = Math.round((filled / total) * 100);
+    document.getElementById("progress-fill").style.width = pct + "%";
+    document.getElementById("progress-label").textContent =
+      filled + " of " + total + " dishes claimed" + (pct === 100 ? " 🎉" : "");
+  }
+
+  // ── GRID ──
+  function renderGrid() {
+    const grid = document.getElementById("dish-grid");
+    grid.innerHTML = DISHES.map(dish => {
+      const taken = assignments[dish.id];
+      const c = COLORS[dish.category];
+      return `
+        <div class="dish-card ${taken ? "taken" : ""}"
+             style="${taken ? `background:${c.bg};border-color:${c.border}` : ""}"
+             onclick="${taken ? "" : `openModal('${dish.id}')`}">
+          <div class="card-top">
+            <span class="card-emoji">${dish.emoji}</span>
+            <div class="card-body">
+              <div class="card-meta">
+                <span class="card-category" style="color:${c.dot}">${dish.category}</span>
+                ${taken ? `<span class="card-badge" style="background:${c.dot}">Claimed</span>` : ""}
+              </div>
+              <p class="card-title">${dish.label}</p>
+              ${taken
+                ? `<p class="card-name" style="color:${c.text}">${taken.name}${taken.dish ? ` — ${taken.dish}` : ""}</p>
+                   ${taken.diet ? `<p class="card-diet">Note: ${taken.diet}</p>` : ""}`
+                : `<p class="card-hint">${dish.hint}</p>`
+              }
+            </div>
+          </div>
+          ${!taken ? `<div class="card-footer">Tap to claim →</div>` : ""}
+        </div>
+      `;
+    }).join("");
+  }
+
+  // ── MODAL ──
+  function openModal(slotId) {
+    const dish = DISHES.find(d => d.id === slotId);
+    const c = COLORS[dish.category];
+    activeSlot = slotId;
+
+    document.getElementById("modal-emoji").textContent = dish.emoji;
+    document.getElementById("modal-cat").textContent = dish.category;
+    document.getElementById("modal-cat").style.color = c.dot;
+    document.getElementById("modal-title").textContent = "Claim: " + dish.label;
+    document.getElementById("modal-hint").textContent = dish.hint;
+    document.getElementById("input-name").value = "";
+    document.getElementById("input-dish").value = "";
+    document.getElementById("input-diet").value = "";
+    document.getElementById("modal-error").classList.add("hidden");
+    document.getElementById("submit-btn").disabled = false;
+    document.getElementById("submit-btn").textContent = "Claim this dish";
+
+    document.getElementById("modal-overlay").classList.remove("hidden");
+    setTimeout(() => document.getElementById("input-name").focus(), 100);
+  }
+
+  function closeModal() {
+    document.getElementById("modal-overlay").classList.add("hidden");
+    activeSlot = null;
+  }
+
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById("modal-overlay")) closeModal();
+  }
+
+  async function submitClaim() {
+    const name = document.getElementById("input-name").value.trim();
+    const dish = document.getElementById("input-dish").value.trim();
+    const diet = document.getElementById("input-diet").value.trim();
+
+    if (!name) {
+      showModalError("Please enter your name to claim this slot.");
+      return;
+    }
+
+    const btn = document.getElementById("submit-btn");
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+
+    try {
+      const res = await fetch("/api/assignments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slotId: activeSlot, name, dish, diet }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 409) {
+          showModalError("Oh no — someone just claimed that slot! Please pick another.");
+        } else {
+          showModalError(data.error || "Something went wrong. Please try again.");
+        }
+        btn.disabled = false;
+        btn.textContent = "Claim this dish";
+        return;
+      }
+
+      assignments = data.assignments;
+      updateProgress();
+      renderGrid();
+      closeModal();
+      showToast("🌿 Claimed! See you at the party");
+
+    } catch (e) {
+      showModalError("Connection error. Please try again.");
+      btn.disabled = false;
+      btn.textContent = "Claim this dish";
+    }
+  }
+
+  function showModalError(msg) {
+    const el = document.getElementById("modal-error");
+    el.textContent = msg;
+    el.classList.remove("hidden");
+  }
+
+  // ── HOST VIEW ──
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById("view-signup").classList.toggle("hidden", tab !== "signup");
+    document.getElementById("view-host").classList.toggle("hidden", tab !== "host");
+    document.getElementById("tab-signup").classList.toggle("active", tab === "signup");
+    document.getElementById("tab-host").classList.toggle("active", tab === "host");
+  }
+
+  async function unlockHost() {
+    hostKey = document.getElementById("host-key-input").value.trim();
+    if (!hostKey) return;
+
+    document.getElementById("host-loading").classList.remove("hidden");
+
+    // Try a DELETE with a dummy non-existent slot to validate key
+    // Actually just load and show — key is only checked on delete
+    document.getElementById("host-loading").classList.add("hidden");
+    document.getElementById("host-content").classList.remove("hidden");
+    hostUnlocked = true;
+    renderAdminTable();
+  }
+
+  function renderAdminTable() {
+    const table = document.getElementById("admin-table");
+    const open = DISHES.filter(d => !assignments[d.id]).length;
+
+    table.innerHTML = DISHES.map((dish, i) => {
+      const taken = assignments[dish.id];
+      const c = COLORS[dish.category];
+      return `
+        <div class="admin-row" style="${taken ? `background:${c.bg}` : ""}">
+          <span class="admin-emoji">${dish.emoji}</span>
+          <div class="admin-info">
+            <p class="admin-title">${dish.label}</p>
+            ${taken
+              ? `<p class="admin-details" style="color:${c.text}">
+                   ${taken.name}${taken.dish ? " · " + taken.dish : ""}${taken.diet ? " · ⚠️ " + taken.diet : ""}
+                 </p>`
+              : `<p class="admin-open">Not yet claimed</p>`
+            }
+          </div>
+          <span class="status-pill" style="color:${taken ? c.dot : "#ddd0c8"};border-color:${taken ? c.dot : "#ddd0c8"}">
+            ${taken ? "✓ Claimed" : "Open"}
+          </span>
+          ${taken ? `<button class="remove-btn" onclick="removeSlot('${dish.id}')" title="Remove">✕</button>` : ""}
+        </div>
+      `;
+    }).join("");
+
+    const notice = document.getElementById("admin-notice");
+    if (open > 0) {
+      notice.classList.remove("hidden");
+      document.getElementById("admin-notice-text").textContent =
+        open + " slot" + (open > 1 ? "s" : "") + " still open — share this link with your guests!";
+    } else {
+      notice.classList.add("hidden");
+    }
+  }
+
+  async function removeSlot(slotId) {
+    if (!confirm("Remove this assignment?")) return;
+
+    try {
+      const res = await fetch("/api/assignments", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slotId, hostKey }),
+      });
+
+      if (res.status === 401) {
+        showToast("❌ Incorrect host key");
+        return;
+      }
+
+      const data = await res.json();
+      assignments = data.assignments;
+      updateProgress();
+      renderGrid();
+      renderAdminTable();
+      showToast("🗑️ Slot removed");
+    } catch (e) {
+      showToast("❌ Error removing slot");
+    }
+  }
+
+  // ── TOAST ──
+  function showToast(msg) {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.remove("hidden");
+    setTimeout(() => el.classList.add("hidden"), 3000);
+  }
+
+  // ── KEYBOARD ──
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+    if (e.key === "Enter" && activeSlot) submitClaim();
+  });
+
+  // ── START ──
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "carols-potluck-signup",
+  "version": "1.0.0",
+  "description": "Potluck dish sign-up for Carol's Sip & See",
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "^8.0.0"
+  }
+}
