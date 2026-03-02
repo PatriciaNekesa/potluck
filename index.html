@@ -446,6 +446,51 @@
     font-size: 18px;
   }
 
+  /* ── ADD DISH CARD ── */
+  .add-dish-card {
+    background: transparent;
+    border: 2px dashed var(--sage-light);
+    border-radius: 12px;
+    padding: 28px 20px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 8px;
+    min-height: 120px;
+  }
+  .add-dish-card:hover {
+    border-color: var(--sage);
+    background: rgba(143,168,139,0.06);
+  }
+  .add-dish-icon { font-size: 28px; }
+  .add-dish-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--ink-light);
+  }
+  .add-dish-hint { font-weight: 200; font-size: 11px; color: #b8a8a0; }
+
+  .field select {
+    width: 100%;
+    border: 1px solid #ddd0c8;
+    background: #fdfaf8;
+    padding: 11px 14px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+    border-radius: 0;
+    appearance: none;
+    cursor: pointer;
+  }
+  .field select:focus { border-color: var(--rose); }
+
   /* ── HIDDEN ── */
   .hidden { display: none; }
 </style>
@@ -530,6 +575,48 @@
   </div>
 </div>
 
+<!-- ADD DISH MODAL -->
+<div class="overlay hidden" id="add-modal-overlay" onclick="closeAddModalOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAddModal()">×</button>
+    <div class="modal-header">
+      <span class="modal-emoji">🍽️</span>
+      <span class="modal-cat" style="color:var(--sage)">Your dish</span>
+      <h2 class="modal-title">Bring something else?</h2>
+      <p class="modal-hint">Add a dish that's not on the list</p>
+    </div>
+    <div class="field-group">
+      <div class="field">
+        <label>What are you bringing? *</label>
+        <input type="text" id="add-input-dish" placeholder="e.g. Mango pudding">
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select id="add-input-category">
+          <option value="Main">Main</option>
+          <option value="Salad">Salad</option>
+          <option value="Side">Side</option>
+          <option value="Nibbles">Nibbles</option>
+          <option value="Dessert">Dessert</option>
+          <option value="Sweet">Sweet</option>
+          <option value="Drinks">Drinks</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Your name *</label>
+        <input type="text" id="add-input-name" placeholder="e.g. Sophie">
+      </div>
+      <div class="field">
+        <label>Allergen / dietary notes (optional)</label>
+        <input type="text" id="add-input-diet" placeholder="e.g. Contains nuts…">
+      </div>
+      <button class="submit-btn" id="add-submit-btn" onclick="submitCustomDish()">Add to the list</button>
+      <div class="error-msg hidden" id="add-modal-error"></div>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast hidden" id="toast"></div>
 
@@ -544,6 +631,11 @@
     { id: "sweet",   category: "Sweet",   emoji: "🍪", label: "Sweet Treats",    hint: "Cookies, brownies, truffles…" },
     { id: "drinks",  category: "Drinks",  emoji: "🍹", label: "Drinks",          hint: "Juice, sparkling water, mocktail…" },
   ];
+
+  const CATEGORY_EMOJIS = {
+    Main: "🍲", Salad: "🥗", Side: "🫕", Nibbles: "🧀",
+    Dessert: "🍰", Sweet: "🍪", Drinks: "🍹", Other: "🍽️",
+  };
 
   const COLORS = {
     Main:    { bg: "#fff5f0", border: "#f4b8a0", dot: "#e8845a", text: "#7a3820" },
@@ -579,10 +671,17 @@
     updateProgress();
   }
 
+  function getCustomDishes() {
+    return Object.entries(assignments)
+      .filter(([id]) => id.startsWith("custom_"))
+      .map(([id, data]) => ({ id, ...data }));
+  }
+
   function updateProgress() {
+    const customCount = getCustomDishes().length;
+    const total = DISHES.length + customCount;
     const filled = Object.keys(assignments).length;
-    const total = DISHES.length;
-    const pct = Math.round((filled / total) * 100);
+    const pct = total === 0 ? 0 : Math.round((filled / total) * 100);
     document.getElementById("progress-fill").style.width = pct + "%";
     document.getElementById("progress-label").textContent =
       filled + " of " + total + " dishes claimed" + (pct === 100 ? " 🎉" : "");
@@ -591,7 +690,8 @@
   // ── GRID ──
   function renderGrid() {
     const grid = document.getElementById("dish-grid");
-    grid.innerHTML = DISHES.map(dish => {
+
+    const predefinedCards = DISHES.map(dish => {
       const taken = assignments[dish.id];
       const c = COLORS[dish.category];
       return `
@@ -617,6 +717,38 @@
         </div>
       `;
     }).join("");
+
+    const customCards = getCustomDishes().map(dish => {
+      const cat = dish.category || "Other";
+      const c = COLORS[cat] || COLORS["Dessert"];
+      const emoji = dish.emoji || CATEGORY_EMOJIS[cat] || "🍽️";
+      return `
+        <div class="dish-card taken" style="background:${c.bg};border-color:${c.border}">
+          <div class="card-top">
+            <span class="card-emoji">${emoji}</span>
+            <div class="card-body">
+              <div class="card-meta">
+                <span class="card-category" style="color:${c.dot}">${cat}</span>
+                <span class="card-badge" style="background:${c.dot}">Claimed</span>
+              </div>
+              <p class="card-title">${dish.dish || dish.label || "Custom dish"}</p>
+              <p class="card-name" style="color:${c.text}">${dish.name}</p>
+              ${dish.diet ? `<p class="card-diet">Note: ${dish.diet}</p>` : ""}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    const addCard = `
+      <div class="add-dish-card" onclick="openAddDishModal()">
+        <span class="add-dish-icon">＋</span>
+        <p class="add-dish-title">Bringing something else?</p>
+        <p class="add-dish-hint">Add a dish that's not on the list</p>
+      </div>
+    `;
+
+    grid.innerHTML = predefinedCards + customCards + addCard;
   }
 
   // ── MODAL ──
@@ -730,7 +862,7 @@
     const table = document.getElementById("admin-table");
     const open = DISHES.filter(d => !assignments[d.id]).length;
 
-    table.innerHTML = DISHES.map((dish, i) => {
+    const predefinedRows = DISHES.map(dish => {
       const taken = assignments[dish.id];
       const c = COLORS[dish.category];
       return `
@@ -752,6 +884,27 @@
         </div>
       `;
     }).join("");
+
+    const customRows = getCustomDishes().map(dish => {
+      const cat = dish.category || "Other";
+      const c = COLORS[cat] || COLORS["Dessert"];
+      const emoji = dish.emoji || CATEGORY_EMOJIS[cat] || "🍽️";
+      return `
+        <div class="admin-row" style="background:${c.bg}">
+          <span class="admin-emoji">${emoji}</span>
+          <div class="admin-info">
+            <p class="admin-title">${dish.dish || dish.label || "Custom dish"} <span style="font-size:11px;font-weight:300;color:${c.dot}">(added by guest)</span></p>
+            <p class="admin-details" style="color:${c.text}">
+              ${dish.name}${dish.diet ? " · ⚠️ " + dish.diet : ""}
+            </p>
+          </div>
+          <span class="status-pill" style="color:${c.dot};border-color:${c.dot}">✓ Claimed</span>
+          <button class="remove-btn" onclick="removeSlot('${dish.id}')" title="Remove">✕</button>
+        </div>
+      `;
+    }).join("");
+
+    table.innerHTML = predefinedRows + customRows;
 
     const notice = document.getElementById("admin-notice");
     if (open > 0) {
@@ -789,6 +942,84 @@
     }
   }
 
+  // ── ADD DISH MODAL ──
+  function openAddDishModal() {
+    document.getElementById("add-input-dish").value = "";
+    document.getElementById("add-input-name").value = "";
+    document.getElementById("add-input-diet").value = "";
+    document.getElementById("add-input-category").value = "Main";
+    document.getElementById("add-modal-error").classList.add("hidden");
+    document.getElementById("add-submit-btn").disabled = false;
+    document.getElementById("add-submit-btn").textContent = "Add to the list";
+    document.getElementById("add-modal-overlay").classList.remove("hidden");
+    setTimeout(() => document.getElementById("add-input-dish").focus(), 100);
+  }
+
+  function closeAddModal() {
+    document.getElementById("add-modal-overlay").classList.add("hidden");
+  }
+
+  function closeAddModalOutside(e) {
+    if (e.target === document.getElementById("add-modal-overlay")) closeAddModal();
+  }
+
+  async function submitCustomDish() {
+    const dishName = document.getElementById("add-input-dish").value.trim();
+    const name = document.getElementById("add-input-name").value.trim();
+    const diet = document.getElementById("add-input-diet").value.trim();
+    const category = document.getElementById("add-input-category").value;
+
+    if (!dishName) {
+      showAddError("Please enter what you're bringing.");
+      return;
+    }
+    if (!name) {
+      showAddError("Please enter your name.");
+      return;
+    }
+
+    const btn = document.getElementById("add-submit-btn");
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+
+    const slotId = "custom_" + Date.now();
+    const emoji = CATEGORY_EMOJIS[category] || "🍽️";
+
+    try {
+      const res = await fetch("/api/assignments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slotId, name, dish: dishName, diet, label: dishName, category, emoji }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showAddError(data.error || "Something went wrong. Please try again.");
+        btn.disabled = false;
+        btn.textContent = "Add to the list";
+        return;
+      }
+
+      assignments = data.assignments;
+      updateProgress();
+      renderGrid();
+      closeAddModal();
+      showToast("🌿 Added! See you at the party");
+
+    } catch (e) {
+      showAddError("Connection error. Please try again.");
+      btn.disabled = false;
+      btn.textContent = "Add to the list";
+    }
+  }
+
+  function showAddError(msg) {
+    const el = document.getElementById("add-modal-error");
+    el.textContent = msg;
+    el.classList.remove("hidden");
+  }
+
   // ── TOAST ──
   function showToast(msg) {
     const el = document.getElementById("toast");
@@ -799,7 +1030,7 @@
 
   // ── KEYBOARD ──
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeModal();
+    if (e.key === "Escape") { closeModal(); closeAddModal(); }
     if (e.key === "Enter" && activeSlot) submitClaim();
   });
 
