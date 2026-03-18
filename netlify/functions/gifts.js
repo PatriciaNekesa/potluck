@@ -5,7 +5,7 @@ export default async (req) => {
 
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 
@@ -104,10 +104,28 @@ export default async (req) => {
       }
 
       // Toggle status
-      current[contributionId].status = current[contributionId].status === "pledged" ? "received" : "pledged";
+      current[contributionId].status = current[contributionId].status === "pledged" ? "fulfilled" : "pledged";
       await store.set("gifts", JSON.stringify(current));
 
       return Response.json({ ok: true, gifts: current }, { headers: corsHeaders });
+    }
+
+    // DELETE — clear all contributions (host only)
+    if (req.method === "DELETE") {
+      const body = await req.json();
+      const { hostKey } = body;
+
+      // Simple host key check — set this in your Netlify env vars
+      const validKey = process.env.HOST_KEY || "carol2024";
+      if (hostKey !== validKey) {
+        return Response.json(
+          { error: "Unauthorized" },
+          { status: 401, headers: corsHeaders }
+        );
+      }
+
+      await store.set("gifts", JSON.stringify({}));
+      return Response.json({ ok: true, gifts: {} }, { headers: corsHeaders });
     }
 
     return Response.json({ error: "Method not allowed" }, { status: 405, headers: corsHeaders });

@@ -746,6 +746,7 @@
       <div style="margin-top: 32px;">
         <h3 style="font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 18px; color: var(--ink); margin-bottom: 16px;">Gift Contributions</h3>
         <div class="admin-table" id="gift-contributors-table"></div>
+        <button onclick="clearAllPledges()" style="margin-top: 14px; background: #f5e8e0; color: var(--ink-light); border: 1px solid #e8ddd8; padding: 9px 14px; border-radius: 6px; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#ede0d6'" onmouseout="this.style.background='#f5e8e0'">Clear all pledges</button>
       </div>
     </div>
   </div>
@@ -1197,9 +1198,9 @@
     }
 
     const rows = contribArray.map(contrib => {
-      const isReceived = contrib.status === "received";
-      const statusColor = isReceived ? "var(--sage)" : "var(--dust)";
-      const statusText = isReceived ? "✓ Received" : "Pledged";
+      const isFulfilled = contrib.status === "fulfilled";
+      const statusColor = isFulfilled ? "var(--sage)" : "var(--dust)";
+      const statusText = isFulfilled ? "✓ Fulfilled" : "Pledged";
       return `
         <div class="admin-row">
           <span class="admin-emoji">💝</span>
@@ -1240,9 +1241,39 @@
       giftContributions = data.gifts;
       renderGiftContributorsTable();
       const status = giftContributions[contributionId].status;
-      showToast(status === "received" ? "✓ Marked as received" : "↩️ Marked as pledged");
+      showToast(status === "fulfilled" ? "✓ Marked as fulfilled" : "↩️ Marked as pledged");
     } catch (e) {
       showToast("❌ Error updating status");
+    }
+  }
+
+  async function clearAllPledges() {
+    if (!confirm("Are you sure you want to clear all pledges? This cannot be undone.")) return;
+
+    try {
+      const res = await fetch("/api/gifts", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hostKey }),
+      });
+
+      if (res.status === 401) {
+        showToast("❌ Incorrect host key");
+        return;
+      }
+
+      const data = await res.json();
+      if (!res.ok) {
+        showToast("❌ Error clearing pledges");
+        return;
+      }
+
+      giftContributions = {};
+      updateGiftProgress();
+      renderGiftContributorsTable();
+      showToast("🗑️ All pledges cleared");
+    } catch (e) {
+      showToast("❌ Error clearing pledges");
     }
   }
 
