@@ -742,6 +742,11 @@
       <div class="admin-notice hidden" id="admin-notice">
         <p id="admin-notice-text"></p>
       </div>
+      
+      <div style="margin-top: 32px;">
+        <h3 style="font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 18px; color: var(--ink); margin-bottom: 16px;">Gift Contributions</h3>
+        <div class="admin-table" id="gift-contributors-table"></div>
+      </div>
     </div>
   </div>
 
@@ -1095,6 +1100,7 @@
     document.getElementById("host-content").classList.remove("hidden");
     hostUnlocked = true;
     renderAdminTable();
+    renderGiftContributorsTable();
   }
 
   function renderAdminTable() {
@@ -1179,6 +1185,29 @@
     } catch (e) {
       showToast("❌ Error removing slot");
     }
+  }
+
+  function renderGiftContributorsTable() {
+    const table = document.getElementById("gift-contributors-table");
+    const contribArray = Object.values(giftContributions).sort((a, b) => b.contributedAt - a.contributedAt);
+    
+    if (contribArray.length === 0) {
+      table.innerHTML = '<div style="padding:20px;text-align:center;font-style:italic;color:#b8a8a0;">No contributions yet</div>';
+      return;
+    }
+
+    const rows = contribArray.map(contrib => `
+      <div class="admin-row">
+        <span class="admin-emoji">💝</span>
+        <div class="admin-info">
+          <p class="admin-title">${contrib.name}</p>
+          <p class="admin-details">UGX ${contrib.amount.toLocaleString()}</p>
+        </div>
+        <span class="status-pill" style="color:var(--rose);border-color:var(--rose)">✓ Received</span>
+      </div>
+    `).join("");
+
+    table.innerHTML = rows;
   }
 
   // ── ADD DISH MODAL ──
@@ -1298,6 +1327,7 @@
       giftContributions = data.gifts;
       updateGiftProgress();
       renderContributors();
+      if (hostUnlocked) renderGiftContributorsTable();
       document.getElementById("gift-input-name").value = "";
       document.getElementById("gift-input-amount").value = "";
       document.getElementById("gift-error").classList.add("hidden");
