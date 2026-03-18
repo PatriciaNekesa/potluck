@@ -1,4 +1,4 @@
-# 🌸 Carol's Sip & See — Potluck Sign-up
+# 🌸 Carol's Baby Shower — Potluck Sign-up
 
 A hosted potluck sign-up form with a real backend, built for Netlify.
 
