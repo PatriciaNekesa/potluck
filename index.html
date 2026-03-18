@@ -500,6 +500,30 @@
     margin: 0 auto;
   }
 
+  .gift-stroller-link {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .gift-stroller-link a {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--sage) 0%, var(--sage-light) 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 300;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(143, 168, 139, 0.2);
+  }
+
+  .gift-stroller-link a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(143, 168, 139, 0.35);
+  }
+
   .gift-progress-wrap {
     background: white;
     border: 1.5px solid var(--border);
@@ -533,6 +557,37 @@
     color: var(--ink);
     margin: 0 0 18px;
     text-align: center;
+  }
+
+  .payment-instructions {
+    background: rgba(212, 132, 154, 0.1);
+    border: 1px solid var(--rose-light);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+
+  .payment-label {
+    font-weight: 300;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin: 0 0 6px;
+  }
+
+  .payment-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: var(--ink);
+    margin: 0;
+    word-break: break-word;
+  }
+
+  .payment-number strong {
+    font-weight: 600;
+    color: var(--rose);
   }
 
   .contributors-card {
@@ -639,6 +694,11 @@
   <div id="view-gift" class="hidden">
     <p class="note" style="margin-top: 20px;">Help us bring home our bundle of joy in style 👶</p>
     <div class="gift-container">
+      <div class="gift-stroller-link">
+        <a href="https://www.jumia.ug/generic-4-in-1-baby-stroller-car-seat-next-generation-stroller-210457883.html" target="_blank" rel="noopener noreferrer">
+          🛒 View the stroller we're contributing to
+        </a>
+      </div>
       <div class="gift-progress-wrap">
         <div class="gift-goal-text">Target: 1,000,000 UGX</div>
         <div class="progress-track">
@@ -649,6 +709,10 @@
 
       <div class="gift-form-card">
         <h3 class="gift-form-title">💝 Make a contribution</h3>
+        <div class="payment-instructions">
+          <p class="payment-label">Send to:</p>
+          <p class="payment-number">Airtel Mobile Money: <strong>070619933</strong></p>
+        </div>
         <div class="field-group">
           <div class="field">
             <label>Your name *</label>
