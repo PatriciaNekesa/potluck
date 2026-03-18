@@ -493,6 +493,114 @@
 
   /* ── HIDDEN ── */
   .hidden { display: none; }
+
+  /* ── GIFT CONTRIBUTION ── */
+  .gift-container {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .gift-progress-wrap {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .gift-goal-text {
+    font-weight: 300;
+    font-size: 12px;
+    color: var(--ink-light);
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .gift-form-card {
+    background: linear-gradient(135deg, var(--rose-pale) 0%, #faf5f8 100%);
+    border: 1.5px solid var(--rose-light);
+    border-radius: 12px;
+    padding: 24px 20px;
+    margin-bottom: 24px;
+  }
+
+  .gift-form-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--ink);
+    margin: 0 0 18px;
+    text-align: center;
+  }
+
+  .contributors-card {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .contributors-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--ink);
+    margin: 0 0 16px;
+  }
+
+  .contributors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .contributor-item {
+    padding: 12px 16px;
+    background: #fdfaf8;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .contributor-info {
+    flex: 1;
+  }
+
+  .contributor-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink);
+    margin: 0 0 2px;
+  }
+
+  .contributor-amount {
+    font-weight: 300;
+    font-size: 12px;
+    color: var(--rose);
+    font-weight: 500;
+  }
+
+  .loading-text {
+    text-align: center;
+    font-style: italic;
+    color: #b8a8a0;
+    padding: 20px;
+    margin: 0;
+  }
+
+  .empty-text {
+    text-align: center;
+    font-style: italic;
+    color: #b8a8a0;
+    padding: 30px 20px;
+    margin: 0;
+  }
 </style>
 </head>
 <body>
@@ -513,6 +621,7 @@
 <!-- TABS -->
 <div class="tabs">
   <button class="tab-btn active" id="tab-signup" onclick="switchTab('signup')">Sign up</button>
+  <button class="tab-btn" id="tab-gift" onclick="switchTab('gift')">Stroller Gift</button>
   <button class="tab-btn" id="tab-host" onclick="switchTab('host')">Host view</button>
 </div>
 
@@ -524,6 +633,43 @@
     <p class="note" style="margin-top: 20px;">Tap an open slot to claim it — first come, first served 🌿</p>
     <div class="loading" id="grid-loading">Loading dishes…</div>
     <div class="grid hidden" id="dish-grid"></div>
+  </div>
+
+  <!-- Stroller Gift view -->
+  <div id="view-gift" class="hidden">
+    <p class="note" style="margin-top: 20px;">Help us bring home our bundle of joy in style 👶</p>
+    <div class="gift-container">
+      <div class="gift-progress-wrap">
+        <div class="gift-goal-text">Target: 1,000,000 UGX</div>
+        <div class="progress-track">
+          <div class="progress-fill" id="gift-progress-fill" style="width: 0%"></div>
+        </div>
+        <p class="progress-label" id="gift-progress-label">Loading…</p>
+      </div>
+
+      <div class="gift-form-card">
+        <h3 class="gift-form-title">💝 Make a contribution</h3>
+        <div class="field-group">
+          <div class="field">
+            <label>Your name *</label>
+            <input type="text" id="gift-input-name" placeholder="Your name">
+          </div>
+          <div class="field">
+            <label>Amount (UGX) *</label>
+            <input type="number" id="gift-input-amount" placeholder="e.g. 50000" min="1000" step="1000">
+          </div>
+          <button class="submit-btn" id="gift-submit-btn" onclick="submitGiftContribution()">Add your contribution</button>
+          <div class="error-msg hidden" id="gift-error"></div>
+        </div>
+      </div>
+
+      <div class="contributors-card">
+        <h3 class="contributors-title">🙏 Contributors</h3>
+        <div class="contributors-list" id="contributors-list">
+          <p class="loading-text">Loading contributors…</p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Host view -->
@@ -648,15 +794,20 @@
   };
 
   let assignments = {};
+  let giftContributions = {};
   let activeSlot = null;
   let currentTab = "signup";
   let hostUnlocked = false;
   let hostKey = "";
 
+  const GIFT_TARGET = 1000000;
+
   // ── INIT ──
   async function init() {
     await loadAssignments();
+    await loadGiftContributions();
     renderGrid();
+    renderContributors();
     document.getElementById("grid-loading").classList.add("hidden");
     document.getElementById("dish-grid").classList.remove("hidden");
   }
@@ -669,6 +820,16 @@
       console.error("Failed to load:", e);
     }
     updateProgress();
+  }
+
+  async function loadGiftContributions() {
+    try {
+      const res = await fetch("/api/gifts");
+      if (res.ok) giftContributions = await res.json();
+    } catch (e) {
+      console.error("Failed to load gifts:", e);
+    }
+    updateGiftProgress();
   }
 
   function getCustomDishes() {
@@ -685,6 +846,33 @@
     document.getElementById("progress-fill").style.width = pct + "%";
     document.getElementById("progress-label").textContent =
       filled + " of " + total + " dishes claimed" + (pct === 100 ? " 🎉" : "");
+  }
+
+  function updateGiftProgress() {
+    const total = Object.values(giftContributions).reduce((sum, contrib) => sum + contrib.amount, 0);
+    const pct = Math.min(Math.round((total / GIFT_TARGET) * 100), 100);
+    document.getElementById("gift-progress-fill").style.width = pct + "%";
+    document.getElementById("gift-progress-label").textContent =
+      "UGX " + total.toLocaleString() + " of " + GIFT_TARGET.toLocaleString() + (pct === 100 ? " ✓" : "");
+  }
+
+  function renderContributors() {
+    const list = document.getElementById("contributors-list");
+    const contribArray = Object.values(giftContributions).sort((a, b) => b.contributedAt - a.contributedAt);
+    
+    if (contribArray.length === 0) {
+      list.innerHTML = '<p class="empty-text">No contributions yet. Be the first! 💝</p>';
+      return;
+    }
+
+    list.innerHTML = contribArray.map(contrib => `
+      <div class="contributor-item">
+        <div class="contributor-info">
+          <p class="contributor-name">${contrib.name}</p>
+        </div>
+        <div class="contributor-amount">UGX ${contrib.amount.toLocaleString()}</div>
+      </div>
+    `).join("");
   }
 
   // ── GRID ──
@@ -839,8 +1027,10 @@
   function switchTab(tab) {
     currentTab = tab;
     document.getElementById("view-signup").classList.toggle("hidden", tab !== "signup");
+    document.getElementById("view-gift").classList.toggle("hidden", tab !== "gift");
     document.getElementById("view-host").classList.toggle("hidden", tab !== "host");
     document.getElementById("tab-signup").classList.toggle("active", tab === "signup");
+    document.getElementById("tab-gift").classList.toggle("active", tab === "gift");
     document.getElementById("tab-host").classList.toggle("active", tab === "host");
   }
 
@@ -1016,6 +1206,65 @@
 
   function showAddError(msg) {
     const el = document.getElementById("add-modal-error");
+    el.textContent = msg;
+    el.classList.remove("hidden");
+  }
+
+  // ── GIFT CONTRIBUTIONS ──
+  async function submitGiftContribution() {
+    const name = document.getElementById("gift-input-name").value.trim();
+    const amount = parseInt(document.getElementById("gift-input-amount").value, 10);
+
+    if (!name) {
+      showGiftError("Please enter your name.");
+      return;
+    }
+    if (!amount || amount < 1000) {
+      showGiftError("Please enter a valid amount (minimum 1,000 UGX).");
+      return;
+    }
+
+    const btn = document.getElementById("gift-submit-btn");
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+
+    const contributionId = "gift_" + Date.now();
+
+    try {
+      const res = await fetch("/api/gifts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contributionId, name, amount }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showGiftError(data.error || "Something went wrong. Please try again.");
+        btn.disabled = false;
+        btn.textContent = "Add your contribution";
+        return;
+      }
+
+      giftContributions = data.gifts;
+      updateGiftProgress();
+      renderContributors();
+      document.getElementById("gift-input-name").value = "";
+      document.getElementById("gift-input-amount").value = "";
+      document.getElementById("gift-error").classList.add("hidden");
+      btn.disabled = false;
+      btn.textContent = "Add your contribution";
+      showToast("💝 Thank you for your contribution!");
+
+    } catch (e) {
+      showGiftError("Connection error. Please try again.");
+      btn.disabled = false;
+      btn.textContent = "Add your contribution";
+    }
+  }
+
+  function showGiftError(msg) {
+    const el = document.getElementById("gift-error");
     el.textContent = msg;
     el.classList.remove("hidden");
   }
