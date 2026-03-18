@@ -5,7 +5,7 @@ export default async (req) => {
 
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 
@@ -58,9 +58,53 @@ export default async (req) => {
       current[contributionId] = {
         name: name.trim(),
         amount: parsedAmount,
+        status: "pledged",
         contributedAt: Date.now(),
       };
 
+      await store.set("gifts", JSON.stringify(current));
+
+      return Response.json({ ok: true, gifts: current }, { headers: corsHeaders });
+    }
+
+    // PUT — toggle contribution status (host only)
+    if (req.method === "PUT") {
+      const body = await req.json();
+      const { contributionId, hostKey } = body;
+
+      // Simple host key check — set this in your Netlify env vars
+      const validKey = process.env.HOST_KEY || "carol2024";
+      if (hostKey !== validKey) {
+        return Response.json(
+          { error: "Unauthorized" },
+          { status: 401, headers: corsHeaders }
+        );
+      }
+
+      if (!contributionId) {
+        return Response.json(
+          { error: "contributionId is required" },
+          { status: 400, headers: corsHeaders }
+        );
+      }
+
+      // Get current gifts
+      let current = {};
+      try {
+        current = await store.get("gifts", { type: "json" }) || {};
+      } catch (e) {
+        current = {};
+      }
+
+      if (!current[contributionId]) {
+        return Response.json(
+          { error: "Contribution not found" },
+          { status: 404, headers: corsHeaders }
+        );
+      }
+
+      // Toggle status
+      current[contributionId].status = current[contributionId].status === "pledged" ? "received" : "pledged";
       await store.set("gifts", JSON.stringify(current));
 
       return Response.json({ ok: true, gifts: current }, { headers: corsHeaders });

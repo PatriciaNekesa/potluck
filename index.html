@@ -1196,18 +1196,54 @@
       return;
     }
 
-    const rows = contribArray.map(contrib => `
-      <div class="admin-row">
-        <span class="admin-emoji">💝</span>
-        <div class="admin-info">
-          <p class="admin-title">${contrib.name}</p>
-          <p class="admin-details">UGX ${contrib.amount.toLocaleString()}</p>
+    const rows = contribArray.map(contrib => {
+      const isReceived = contrib.status === "received";
+      const statusColor = isReceived ? "var(--sage)" : "var(--dust)";
+      const statusText = isReceived ? "✓ Received" : "Pledged";
+      return `
+        <div class="admin-row">
+          <span class="admin-emoji">💝</span>
+          <div class="admin-info">
+            <p class="admin-title">${contrib.name}</p>
+            <p class="admin-details">UGX ${contrib.amount.toLocaleString()}</p>
+          </div>
+          <span class="status-pill" style="color:${statusColor};border-color:${statusColor}">
+            ${statusText}
+          </span>
+          <button class="remove-btn" onclick="toggleContributionStatus('${Object.keys(giftContributions).find(k => giftContributions[k] === contrib)}')" title="Toggle status">↕</button>
         </div>
-        <span class="status-pill" style="color:var(--rose);border-color:var(--rose)">✓ Received</span>
-      </div>
-    `).join("");
+      `;
+    }).join("");
 
     table.innerHTML = rows;
+  }
+
+  async function toggleContributionStatus(contributionId) {
+    try {
+      const res = await fetch("/api/gifts", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contributionId, hostKey }),
+      });
+
+      if (res.status === 401) {
+        showToast("❌ Incorrect host key");
+        return;
+      }
+
+      const data = await res.json();
+      if (!res.ok) {
+        showToast("❌ Error updating status");
+        return;
+      }
+
+      giftContributions = data.gifts;
+      renderGiftContributorsTable();
+      const status = giftContributions[contributionId].status;
+      showToast(status === "received" ? "✓ Marked as received" : "↩️ Marked as pledged");
+    } catch (e) {
+      showToast("❌ Error updating status");
+    }
   }
 
   // ── ADD DISH MODAL ──
