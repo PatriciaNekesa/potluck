@@ -606,39 +606,30 @@
     margin: 0 0 16px;
   }
 
-  .contributors-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .contributor-item {
-    padding: 12px 16px;
-    background: #fdfaf8;
-    border: 1px solid var(--border);
+  .pending-balance {
+    text-align: center;
+    padding: 24px 20px;
+    background: #f9f0f4;
+    border: 1px solid var(--rose-light);
     border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
   }
 
-  .contributor-info {
-    flex: 1;
-  }
-
-  .contributor-name {
+  .pending-amount {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 600;
-    font-size: 14px;
-    color: var(--ink);
-    margin: 0 0 2px;
+    font-size: 32px;
+    color: var(--rose);
+    margin: 0 0 8px;
+    line-height: 1;
   }
 
-  .contributor-amount {
+  .pending-label {
     font-weight: 300;
     font-size: 12px;
-    color: var(--rose);
-    font-weight: 500;
+    color: var(--ink-light);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 0;
   }
 
   .loading-text {
@@ -728,9 +719,9 @@
       </div>
 
       <div class="contributors-card">
-        <h3 class="contributors-title">🙏 Contributors</h3>
-        <div class="contributors-list" id="contributors-list">
-          <p class="loading-text">Loading contributors…</p>
+        <h3 class="contributors-title">� Pending Balance</h3>
+        <div class="pending-balance" id="pending-balance">
+          <p class="loading-text">Loading…</p>
         </div>
       </div>
     </div>
@@ -921,22 +912,14 @@
   }
 
   function renderContributors() {
-    const list = document.getElementById("contributors-list");
-    const contribArray = Object.values(giftContributions).sort((a, b) => b.contributedAt - a.contributedAt);
+    const total = Object.values(giftContributions).reduce((sum, contrib) => sum + contrib.amount, 0);
+    const pending = Math.max(0, GIFT_TARGET - total);
     
-    if (contribArray.length === 0) {
-      list.innerHTML = '<p class="empty-text">No contributions yet. Be the first! 💝</p>';
-      return;
-    }
-
-    list.innerHTML = contribArray.map(contrib => `
-      <div class="contributor-item">
-        <div class="contributor-info">
-          <p class="contributor-name">${contrib.name}</p>
-        </div>
-        <div class="contributor-amount">UGX ${contrib.amount.toLocaleString()}</div>
-      </div>
-    `).join("");
+    const balanceDiv = document.getElementById("pending-balance");
+    balanceDiv.innerHTML = `
+      <p class="pending-amount">UGX ${pending.toLocaleString()}</p>
+      <p class="pending-label">Still needed</p>
+    `;
   }
 
   // ── GRID ──
